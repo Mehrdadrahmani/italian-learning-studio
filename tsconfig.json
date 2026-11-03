@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "target": "ES2021", "lib": ["ES2022", "DOM", "DOM.Iterable"], "module": "ESNext", "moduleResolution": "bundler",
+    "jsx": "react", "jsxFactory": "__h", "jsxFragmentFactory": "React.Fragment", "strict": true, "noEmit": true, "skipLibCheck": true, "esModuleInterop": true
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,6 @@
+{
+  "appId": "com.mehrdadrahmani.italianstudio",
+  "appName": "Italiano",
+  "webDir": "dist/ios",
+  "ios": { "contentInset": "never", "backgroundColor": "#faf6ec" }
+}

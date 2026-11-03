@@ -1,0 +1,33 @@
+// Offline launch for the PWA, and a smoke test of the Artifact build with a stand-in runtime.
+import { webkit, devices } from 'playwright';
+import { spawn } from 'node:child_process';
+import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os'; import { join } from 'node:path';
+const srv = spawn('node', ['scripts/serve.mjs'], { env: { ...process.env, PORT: '4198' } });
+process.on('exit', () => srv.kill());
+await new Promise(r => srv.stdout.once('data', r));
+const browser = await webkit.launch();
+const ctx = await browser.newContext({ ...devices['iPhone 13'] });
+const page = await ctx.newPage();
+await page.goto('http://localhost:4198/');
+const ready = await page.evaluate(() => navigator.serviceWorker ? Promise.race([navigator.serviceWorker.ready.then(() => true), new Promise(r => setTimeout(() => r(false), 6000))]) : false);
+console.log('service worker active:', ready);
+if (ready) { await page.reload(); await page.waitForTimeout(500); await ctx.setOffline(true); await page.reload(); await page.waitForTimeout(500);
+  console.log('offline launch renders:', (await page.locator('.hero .name').count()) === 1); await ctx.setOffline(false); }
+const m = JSON.parse(readFileSync('dist/pwa/manifest.webmanifest', 'utf8')); console.log('manifest display:', m.display);
+const dir = mkdtempSync(join(tmpdir(), 'ils-'));
+writeFileSync(join(dir, 'a.html'), `<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>${readFileSync('dist/artifact.html', 'utf8')}</body></html>`);
+const p2 = await (await browser.newContext({ ...devices['iPhone 13'] })).newPage();
+const errs = []; p2.on('pageerror', e => errs.push(e.message));
+await p2.addInitScript(() => { const mem = {}; const doc = { get: async () => ({ exists: !!mem.d, data: () => mem.d }), set: async d => { window.__saved = d; mem.d = d; } };
+  const caps = { db: { doc: p => (window.__path = p, doc) }, user: { id: async () => 'viewer1' }, sample: Object.assign(async (i, o) => { o.onText?.({ text: 'پاسخ آزمایشی' }); return { text: 'پاسخ آزمایشی' }; }, {}) };
+  window.claude = { use: async n => caps[n] ?? null }; });
+await p2.goto('file://' + join(dir, 'a.html')); await p2.waitForTimeout(800);
+console.log('artifact renders:', (await p2.locator('.hero .name').count()) === 1, 'errors:', errs.length);
+await p2.locator('.tab', { hasText: 'بیشتر' }).click(); await p2.locator('.main .row', { hasText: 'مربی' }).first().click(); await p2.waitForTimeout(100);
+await p2.locator('.opt').first().click(); await p2.waitForTimeout(100);
+console.log('tutor via runtime:', await p2.locator('.bubble.ai').innerText());
+await p2.locator('.tab', { hasText: 'بیشتر' }).click(); await p2.locator('.main .row', { hasText: 'تنظیمات' }).first().click();
+await p2.locator('.chip', { hasText: 'تیره' }).click(); await p2.waitForTimeout(3000);
+console.log('db path:', await p2.evaluate(() => window.__path), 'saved:', await p2.evaluate(() => !!window.__saved), 'status:', await p2.getByText('حساب Claude شما').count());
+await browser.close(); process.exit(0);
