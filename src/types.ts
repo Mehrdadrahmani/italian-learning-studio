@@ -77,4 +77,7 @@ export interface AppState {
   speaking: Record<string, number>;
   recent: string[];
   leitner: Record<string, { box: number; due: number; last: number }>;
+  /** Words the learner saved from the dictionary; meanings come from machine translation or the learner. */
+  mine: Record<string, MyWord>;
 }
+export interface MyWord { it: string; fa: string; en: string; ts: number }

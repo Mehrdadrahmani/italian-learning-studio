@@ -11,7 +11,7 @@ export const defaults: Settings = {
 };
 const fresh = (): AppState => ({
   v: 1, updatedAt: 0, settings: { ...defaults }, lessons: {}, srs: {}, known: {}, days: {},
-  tests: [], pron: {}, done: {}, writing: [], speaking: {}, recent: [], leitner: {},
+  tests: [], pron: {}, done: {}, writing: [], speaking: {}, recent: [], leitner: {}, mine: {},
 });
 
 export function normalize(raw: unknown): AppState | null {
@@ -112,6 +112,18 @@ export function review(id: string, g: Grade) {
 }
 export const addLeitner = (ids: string[]) => update(s => { ids.forEach(id => { if (!s.leitner[id]) s.leitner[id] = newCard(); }); });
 export const leitnerAnswer = (id: string, ok: boolean) => update(s => { s.leitner[id] = answer(s.leitner[id], ok); bump(s, 'reviews'); if (ok) bump(s, 'correct'); });
+/* Saved words get id "m:<italian>" and join both review schedules. */
+export const myId = (it: string) => it.trim().toLowerCase().replace(/\s+/g, ' ');
+export function saveMyWord(w: { it: string; fa: string; en: string }) {
+  const id = myId(w.it); if (!id) return;
+  update(s => {
+    s.mine[id] = { it: w.it.trim(), fa: w.fa.trim(), en: w.en.trim(), ts: s.mine[id]?.ts ?? Date.now() };
+    const k = 'm:' + id, now = Date.now();
+    if (!s.srs[k]) s.srs[k] = { due: now, interval: 0, ease: 2.5, reps: 0, lapses: 0, last: 0 };
+    if (!s.leitner[k]) s.leitner[k] = newCard(now);
+  });
+}
+export const deleteMyWord = (id: string) => update(s => { delete s.mine[id]; delete s.srs['m:' + id]; delete s.leitner['m:' + id]; });
 export function markWord(id: string, knows: boolean) {
   update(s => {
     const key = 'v:' + id;

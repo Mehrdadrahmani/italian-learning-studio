@@ -333,6 +333,20 @@ Artifact در claude.ai|Artifact on claude.ai|Artifact su claude.ai
 توضیح درس‌ها فعلاً به فارسی است.|Lesson explanations are in Persian for now.|Per ora le spiegazioni delle lezioni sono in persiano.
 لایتنر|Leitner boxes|Scatole di Leitner
 فرهنگ و ترجمه|Dictionary & Translate|Dizionario e traduzione
+واژهٔ من|My word|Parola mia
+در واژه‌های من|In My words|Nelle mie parole
+افزودن به واژه‌های من|Add to My words|Aggiungi alle mie parole
+معنی به فارسی|Persian meaning|Significato in persiano
+معنی به انگلیسی|English meaning|Significato in inglese
+ذخیرهٔ تغییرها|Save changes|Salva le modifiche
+ذخیره و افزودن به لایتنر|Save and add to Leitner|Salva e aggiungi al Leitner
+ذخیره شد. این واژه در لایتنر و مرور هوشمند آمده است.|Saved. This word is now in Leitner and Smart Revision.|Salvata. La parola ora è nel Leitner e nel Ripasso intelligente.
+معنی‌ها از ترجمهٔ ماشینی پر می‌شوند و ممکن است نادرست باشند. پیش از ذخیره آن‌ها را بررسی کنید.|Meanings are filled in by machine translation and may be wrong. Check them before saving.|I significati vengono dalla traduzione automatica e possono essere sbagliati. Controllali prima di salvare.
+واژه‌های درسی|Course words|Parole del corso
+واژه‌های من|My words|Le mie parole
+حذف|Delete|Elimina
+جست‌وجو در فرهنگ آنلاین:|Look up in the online dictionary:|Cerca nel dizionario online:
+هر واژه‌ای را در «فرهنگ و ترجمه» جست‌وجو کنید و به واژه‌های من بیفزایید.|Look up any word in Dictionary & Translate and add it to My words.|Cerca qualsiasi parola in Dizionario e traduzione e aggiungila alle mie parole.
 فرهنگ لغت و Google Translate|Dictionary and Google Translate|Dizionario e Google Translate
 حالت تیره یا روشن|Dark or light mode|Modalità scura o chiara
 جعبه|Box|Scatola

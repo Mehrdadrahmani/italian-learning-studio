@@ -6,7 +6,7 @@ import { GRAMMAR, grammarById } from '../data/grammar';
 import { TEXTS, textById } from '../data/texts';
 import { PRON, PRON_GROUPS, pronById } from '../data/pronunciation';
 import { meaning, tr } from '../i18n';
-import { addCards, completeLesson, logPron, logTest, markDone, markWord, remember, useApp } from '../lib/store';
+import { addCards, completeLesson, deleteMyWord, logPron, logTest, markDone, markWord, remember, useApp } from '../lib/store';
 import { AudioNote, Label, Play, PlayBoth, Quiz, QuizSummary, type QuizResult, Recorder, Rich, Row, Sec, Sheet, Table, fa, useLinePlayer, useNav } from './core';
 
 /* ---- course ---- */
@@ -127,14 +127,19 @@ export function VocabLab() {
   const { go } = useNav(); const s = useApp();
   const [q, setQ] = useState(''); const [topic, setTopic] = useState(''); const [lvl, setLvl] = useState<Level | ''>('');
   const list = VOCAB.filter(v => (!topic || v.topic === topic) && (!lvl || v.level === lvl) && (!q || (v.it + v.fa + v.en).toLowerCase().includes(q.toLowerCase())));
+  const mine = Object.entries(s.mine).filter(([, w]) => !q || (w.it + w.fa + w.en).toLowerCase().includes(q.toLowerCase())).sort((a, b) => b[1].ts - a[1].ts);
   return <>
-    <div className="stats" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
-      <div className="stat"><b>{fa(VOCAB.length)}</b><span>کل واژه‌ها</span></div>
+    <div className="stats" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
+      <div className="stat"><b>{fa(VOCAB.length)}</b><span>واژه‌های درسی</span></div>
+      <div className="stat"><b>{fa(mine.length)}</b><span>واژه‌های من</span></div>
       <div className="stat"><b>{fa(Object.keys(s.known).length)}</b><span>یادگرفته</span></div>
       <div className="stat"><b>{fa(VOCAB.filter(v => isDue(s, v.id)).length)}</b><span>برای مرور</span></div>
     </div>
     <button className="btn wide" disabled={!list.length} onClick={() => go({ s: 'flash', p: { topic, lvl, q } })}>فلش‌کارت با {fa(Math.min(list.length, 20))} واژه از این فهرست</button>
     <input id="vocab-search" className="field" type="search" placeholder="جست‌وجو به ایتالیایی، فارسی یا انگلیسی" aria-label="جست‌وجو" value={q} onChange={e => setQ(e.target.value)} />
+    {q.trim() && <button className="btn ghost wide" onClick={() => go({ s: 'dict', p: q.trim() })}>جست‌وجو در فرهنگ آنلاین: <bdi dir="auto">{q.trim()}</bdi></button>}
+    {mine.length > 0 && <Sec title="واژه‌های من"><div className="list">{mine.map(([id, w]) => <div key={id} className="myrow"><Row title={<bdi dir="ltr" className="it">{w.it}</bdi>} sub={meaning(w) || w.fa || w.en} onClick={() => go({ s: 'dict', p: w.it })} /><button className="btn quiet" aria-label={`${tr('حذف')} ${w.it}`} onClick={() => deleteMyWord(id)}>حذف</button></div>)}</div></Sec>}
+    {!mine.length && !q && <p className="muted small">هر واژه‌ای را در «فرهنگ و ترجمه» جست‌وجو کنید و به واژه‌های من بیفزایید.</p>}
     <div className="chips"><button className="chip" aria-pressed={!lvl} onClick={() => setLvl('')}>همهٔ سطح‌ها</button>{LEVELS.map(l => <button key={l} className="chip" aria-pressed={lvl === l} onClick={() => setLvl(l)}>{l}</button>)}</div>
     <div className="chips"><button className="chip" aria-pressed={!topic} onClick={() => setTopic('')}>همهٔ موضوعات</button>{Object.entries(TOPICS).map(([k, t]) => <button key={k} className="chip" aria-pressed={topic === k} onClick={() => setTopic(k)}>{t}</button>)}</div>
     {list.length ? <div className="list">{list.map(v => <Row key={v.id} title={<bdi dir="ltr" className="it">{nounWithArticle(v)}</bdi>} sub={meaning(v)} left={<span className="badge">{v.level}</span>} onClick={() => go({ s: 'word', p: v.id })} />)}</div>

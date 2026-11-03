@@ -54,6 +54,8 @@ In Xcode, select the App target, choose your Apple ID under Signing & Capabiliti
 | Google Translate button (opens Google) | None | Everywhere |
 | Google Cloud Translation inside the app | Your own, in Settings | Web and iOS; not yet tested with a real key |
 
+Any word looked up there can be saved to **My words** with its Persian and English meanings, which are filled in by machine translation and can be edited. Saved words appear in the Vocabulary Lab and join Leitner and Smart Revision. The course itself still has 183 hand-written words with examples.
+
 Artifact pages cannot call outside services, so that version offers the links plus translation by Claude. The Google key stays on the device and is left out of backups and sync.
 
 ## Languages

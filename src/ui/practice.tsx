@@ -108,6 +108,7 @@ export function WriteView({ id }: { id: string }) {
 type Face = { front: React.ReactNode; back: React.ReactNode; say?: string; kind: string };
 export function face(id: string): Face | null {
   const [k, a, b] = id.split(':');
+  if (k === 'm') { const w = getState().mine[id.slice(2)]; return w ? { kind: 'واژهٔ من', say: w.it, front: <span className="big it">{w.it}</span>, back: <span className="big fa">{meaning(w) || w.fa || w.en}</span> } : null; }
   if (k === 'v') { const v = vocabById.get(a); return v ? { kind: 'واژه', say: v.it, front: <span className="big">{nounWithArticle(v)}</span>, back: <><span className="big fa">{meaning(v)}</span><span className="it">{v.exIt}</span><span className="muted">{v.exFa}</span></> } : null; }
   if (k === 'g') { const g = grammarById.get(a); return g ? { kind: 'الگوی دستوری', front: <span><Rich t={g.pattern.front} plain /></span>, back: <span className="big">{g.pattern.back}</span>, say: g.pattern.back } : null; }
   if (k === 'p') { const p = pronById.get(a); return p ? { kind: 'هدف تلفظ', say: p.examples[0].it, front: <span className="big">{p.examples.slice(0, 3).map(e => e.it).join(' · ')}</span>, back: <><b>{p.title}</b><span className="ipa">{p.ipa}</span></> } : null; }

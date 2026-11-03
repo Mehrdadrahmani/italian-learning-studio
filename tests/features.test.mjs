@@ -72,6 +72,26 @@ const liveEn = await page.locator('.result').first().innerText(); ok(/^[\x00-\x7
 ok((await page.locator('a[href*="translate.google.com"]').getAttribute('href')).includes('sl=it&tl=en'), 'Google Translate link carries text and direction');
 await page.locator('#dict-q').fill('zzqxy'); await page.getByRole('button', { name: 'جست‌وجو و ترجمه' }).click(); await page.waitForTimeout(2500);
 ok((await page.getByText('در ویکی‌واژه مدخلی برای این واژه نیست').count()) === 1, 'unknown word has an empty state');
+// saving a word that is not in the course to My words
+await page.locator('#dict-q').fill('farfalla'); await page.getByRole('button', { name: 'جست‌وجو و ترجمه' }).click();
+await page.waitForSelector('.result', { timeout: 15000 }); await page.waitForTimeout(2500);
+const pre = await page.locator('#my-en').inputValue(); ok(/butterfl/i.test(pre), 'English meaning pre-filled from live translation: ' + pre);
+await page.getByRole('button', { name: 'ذخیره و افزودن به لایتنر' }).click(); await page.waitForSelector('text=ذخیره شد', { timeout: 15000 });
+const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ils.state.v1')));
+ok(saved.mine.farfalla?.en && PERSIAN.test(saved.mine.farfalla?.fa ?? ''), 'saved word has English and Persian meanings: ' + JSON.stringify(saved.mine.farfalla));
+ok(!!saved.leitner['m:farfalla'] && !!saved.srs['m:farfalla'], 'saved word joins Leitner and Smart Revision');
+await tab(4); await page.locator('.main .row', { hasText: 'آزمایشگاه واژگان' }).first().click(); await page.waitForTimeout(40);
+ok((await page.locator('.myrow', { hasText: 'farfalla' }).count()) === 1, 'saved word listed under My words');
+await page.locator('#vocab-search').fill('gatto'); ok((await page.getByRole('button', { name: /جست‌وجو در فرهنگ آنلاین/ }).count()) === 1, 'vocabulary search offers the online dictionary');
+await page.locator('#vocab-search').fill('');
+await openMore(10); let seen = false;
+for (let k = 0; k < 15 && !seen; k++) { if (!(await page.locator('.flash').count())) break; seen = /farfalla/.test(await page.locator('.flash').innerText()); if (!seen) { await page.locator('.flash').click(); await page.getByRole('button', { name: 'بلد بودم' }).click(); } }
+ok(seen, 'saved word appears as a Leitner card');
+await tab(4); await page.locator('.main .row', { hasText: 'آزمایشگاه واژگان' }).first().click();
+await page.getByRole('button', { name: 'حذف farfalla' }).click(); await page.waitForTimeout(40);
+const gone = await page.evaluate(() => JSON.parse(localStorage.getItem('ils.state.v1')));
+ok(!gone.mine.farfalla && !gone.leitner['m:farfalla'], 'deleting a saved word removes its cards');
+await openMore(11);
 await ctx.setOffline(true);
 await page.locator('#dict-q').fill('pane'); await page.getByRole('button', { name: 'جست‌وجو و ترجمه' }).click(); await page.waitForTimeout(800);
 ok((await page.getByText('اتصال ناموفق بود').count()) >= 1, 'offline reports a connection error');

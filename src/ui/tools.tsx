@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { VOCAB, nounWithArticle } from '../data/vocab';
 import { tr } from '../i18n';
 import { BOX_DAYS, MASTERED, dueCards } from '../lib/leitner';
-import { addLeitner, getState, leitnerAnswer, useApp } from '../lib/store';
+import { addLeitner, getState, leitnerAnswer, myId, saveMyWord, useApp } from '../lib/store';
 import { canCallOut, getGoogleKey, google, googleLink, myMemory, treccaniLink, wiktionary, wiktionaryLink, type Sense, type Target } from '../lib/online';
 import { Play, Row, Sec, fa, useNav } from './core';
 import { aiError, face, useSample } from './practice';
@@ -31,6 +31,32 @@ export function Leitner() {
     <div className="btns"><button className="btn ghost" onClick={addNew}>افزودن ۱۰ واژهٔ تازه</button>{Object.keys(s.srs).some(k => !s.leitner[k]) && <button className="btn ghost" onClick={addSrs}>افزودن کارت‌های مرور هوشمند</button>}</div>
     <Sec title="روش لایتنر چگونه کار می‌کند"><p className="muted">هر کارت از جعبهٔ ۱ شروع می‌شود. پاسخ درست آن را یک جعبه جلو می‌برد و پاسخ نادرست آن را به جعبهٔ ۱ برمی‌گرداند. جعبه‌ها هر ۱، ۲، ۴، ۸ و ۱۶ روز مرور می‌شوند. پس از جعبهٔ ۵ کارت به مرحلهٔ تسلط می‌رسد.</p><p className="muted small">لایتنر و مرور هوشمند جدا از هم زمان‌بندی می‌شوند.</p></Sec>
   </>;
+}
+
+/* ---- saving a looked-up word to the learner's own list ---- */
+function SaveWord({ it, to, guess }: { it: string; to: Target; guess: string }) {
+  const s = useApp(); const saved = s.mine[myId(it)];
+  const [m, setM] = useState({ fa: saved?.fa ?? '', en: saved?.en ?? '' }), [busy, setBusy] = useState(false), [done, setDone] = useState(false);
+  const [touched, setTouched] = useState(false);
+  useEffect(() => { if (guess && !touched && !saved) setM(x => ({ ...x, [to]: guess })); }, [guess]);
+  const other: Target = to === 'fa' ? 'en' : 'fa';
+  const save = async () => {
+    setBusy(true);
+    let w = { it, ...m };
+    if (!w[other] && canCallOut()) { try { w = { ...w, [other]: await myMemory(it, other) }; } catch { /* the learner can fill it in later */ } }
+    saveMyWord(w); setM({ fa: w.fa, en: w.en }); setBusy(false); setDone(true);
+  };
+  const edit = (k: Target, v: string) => { setTouched(true); setDone(false); setM(x => ({ ...x, [k]: v })); };
+  return <div className="card">
+    <h3>{saved ? 'در واژه‌های من' : 'افزودن به واژه‌های من'}</h3>
+    <label className="muted small" htmlFor="my-fa">معنی به فارسی</label>
+    <input id="my-fa" className="field" dir="rtl" lang="fa" value={m.fa} onChange={e => edit('fa', e.target.value)} />
+    <label className="muted small" htmlFor="my-en">معنی به انگلیسی</label>
+    <input id="my-en" className="field" dir="ltr" lang="en" value={m.en} onChange={e => edit('en', e.target.value)} />
+    <button className="btn" disabled={busy || !(m.fa.trim() || m.en.trim())} onClick={save}>{saved ? 'ذخیرهٔ تغییرها' : 'ذخیره و افزودن به لایتنر'}</button>
+    {done && <p className="notice info" role="status">ذخیره شد. این واژه در لایتنر و مرور هوشمند آمده است.</p>}
+    <p className="muted small">معنی‌ها از ترجمهٔ ماشینی پر می‌شوند و ممکن است نادرست باشند. پیش از ذخیره آن‌ها را بررسی کنید.</p>
+  </div>;
 }
 
 /* ---- dictionary and translation ---- */
@@ -71,6 +97,7 @@ export function Dictionary({ word }: { word?: string }) {
     </form>
     {ran && <>
       {local.length > 0 && <Sec title="در واژگان این برنامه"><div className="list">{local.map(v => <Row key={v.id} title={<bdi dir="ltr" className="it">{nounWithArticle(v)}</bdi>} sub={`${v.fa} · ${v.en}`} onClick={() => go({ s: 'word', p: v.id })} />)}</div></Sec>}
+      {!local.length && <SaveWord key={ran + to} it={ran} to={to} guess={gg.value || mm.value || cl.value || ''} />}
       <Result o={gg} title="ترجمهٔ Google" /><Result o={mm} title="ترجمهٔ ماشینی MyMemory" /><Result o={cl} title="ترجمهٔ Claude" />
       {wk.state !== 'idle' && <Sec title="ویکی‌واژه">
         {wk.state === 'busy' && <p className="muted">...</p>}{wk.error && <p className="notice bad">{wk.error}</p>}
